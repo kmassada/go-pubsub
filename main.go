@@ -1,33 +1,33 @@
 // pubsub attempts to reproduce a client timeout issue.
 package main
- 
+
 import (
 	"context"
 	"fmt"
 	"math/rand"
 	"os"
 	"os/user"
+	"strconv"
 	"sync/atomic"
 	"time"
-	"strconv"
- 
+
 	"cloud.google.com/go/pubsub"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 )
- 
+
 var (
 	// Set to true if you want this task to publish
 	shouldPublish = true
 	// Set to true if you want this task to subscribe
 	shouldSubscribe = true
- 
-	projectname = "project-external"
- 
+
+	projectname = os.Getenv("PROJECT_ID")
+
 	// How fast do you want to broadcast?
 	broadcastRate = 150 * time.Millisecond
- 
+
 	topicName = "pubsub-repro"
 	subName   = func() string {
 		i := rand.Intn(9)
@@ -37,17 +37,17 @@ var (
 		return fmt.Sprintf("pubsub-repro-subscription-%d", i)
 	}
 )
- 
+
 // Subscription represents methods on a subscription object.
 type Subscription struct {
 	subscription *pubsub.Subscription
 	topic        *pubsub.Topic
 	context      context.Context
 	cancelFunc   context.CancelFunc
- 
+
 	nCallbacks int32 // atomic
 }
- 
+
 func (sub *Subscription) process() {
 	fmt.Printf("Listening for messages...\n\n")
 	err := sub.subscription.Receive(sub.context, func(ctx context.Context, msg *pubsub.Message) {
@@ -62,19 +62,19 @@ func (sub *Subscription) process() {
 	fmt.Printf("Bailing\n")
 	sub.Stop()
 }
- 
+
 func (sub *Subscription) Stop() {
 	fmt.Println("Invoking cancelFunc()")
 	sub.cancelFunc()
 }
- 
+
 func (sub *Subscription) logNCallbacks() {
 	for {
 		time.Sleep(5 * time.Second)
 		fmt.Printf("nCallbacks = %d\n", atomic.LoadInt32(&sub.nCallbacks))
 	}
 }
- 
+
 func createOrGetTopic(ctx context.Context, client *pubsub.Client) (*pubsub.Topic, error) {
 	// Attempt to create the Topic
 	topic, err := client.CreateTopic(ctx, topicName)
@@ -88,7 +88,7 @@ func createOrGetTopic(ctx context.Context, client *pubsub.Client) (*pubsub.Topic
 	fmt.Printf("Using topic: %s\n", topic.ID())
 	return topic, nil
 }
- 
+
 func createOrGetSubscription(ctx context.Context, client *pubsub.Client, topic *pubsub.Topic) (*pubsub.Subscription, error) {
 	name := subName()
 	// Attempt to create the Subscription
@@ -105,18 +105,18 @@ func createOrGetSubscription(ctx context.Context, client *pubsub.Client, topic *
 	fmt.Printf("Using subscription: %s\n", sub.ID())
 	return sub, nil
 }
- 
+
 func createSubscription(ctx context.Context, c *pubsub.Client) *Subscription {
 	topic, err := createOrGetTopic(ctx, c)
 	if err != nil {
 		return nil
 	}
- 
+
 	sub, err := createOrGetSubscription(ctx, c, topic)
 	if err != nil {
 		return nil
 	}
- 
+
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Subscription{
 		subscription: sub,
@@ -125,11 +125,11 @@ func createSubscription(ctx context.Context, c *pubsub.Client) *Subscription {
 		cancelFunc:   cancel,
 	}
 }
- 
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	ctx := context.Background()
- 
+
 	client, err := newClient(ctx)
 	if err != nil {
 		fmt.Printf("Err: %v\n", err)
@@ -139,7 +139,7 @@ func main() {
 		fmt.Printf("Client is unexpectedly nil\n")
 		return
 	}
- 
+
 	res := createSubscription(ctx, client)
 	go res.logNCallbacks()
 	if shouldPublish {
@@ -153,13 +153,13 @@ func main() {
 		}(res)
 		defer ticker.Stop()
 	}
- 
+
 	if shouldSubscribe {
 		go res.process()
 	}
 	select {}
 }
- 
+
 func (sub *Subscription) publish(t time.Time) {
 	msg := make([]byte, 16)
 	rand.Read(msg)
@@ -173,7 +173,7 @@ func (sub *Subscription) publish(t time.Time) {
 	}
 	fmt.Printf("Broadcasting new message at %s (msg: %s).\n", t, m)
 }
- 
+
 func newClient(ctx context.Context) (*pubsub.Client, error) {
 	fp, err := fileloc()
 	if err != nil {
@@ -185,9 +185,9 @@ func newClient(ctx context.Context) (*pubsub.Client, error) {
 	}
 	return c, nil
 }
- 
+
 func fileloc() (string, error) {
-	if f := os.Getenv("CREDENTIALS_FILE"); f != "" {
+	if f := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); f != "" {
 		return f, nil
 	}
 	u, err := user.Current()
