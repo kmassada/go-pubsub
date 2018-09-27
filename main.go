@@ -1,4 +1,3 @@
-// pubsub attempts to reproduce a client timeout issue.
 package main
 
 import (
@@ -33,6 +32,7 @@ var (
 		i := rand.Intn(9)
 		if s := os.Getenv("SUB_SUFFIX"); s != "" {
 			i, _ := strconv.Atoi(s)
+			i = i + 0
 		}
 		return fmt.Sprintf("pubsub-repro-subscription-%d", i)
 	}
