@@ -29,8 +29,8 @@ spec:
           value: "true"
         - name: SUBSCRIBE
           value: "true"
-        - name: "SUB_SUFFIX"
-          value: 4
+        - name: SUB_SUFFIX
+          value: "4"
         - name: "GOOGLE_APPLICATION_CREDENTIALS"
           value: "/var/run/secret/cloud.google.com/$APPLICATION-sa-key.json"
         - name: "PROJECT_ID"
