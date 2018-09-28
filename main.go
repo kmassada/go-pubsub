@@ -31,8 +31,7 @@ var (
 	subName   = func() string {
 		i := rand.Intn(9)
 		if s := os.Getenv("SUB_SUFFIX"); s != "" {
-			i, _ := strconv.Atoi(s)
-			i = i + 0
+			i, _ = strconv.Atoi(s)
 		}
 		return fmt.Sprintf("pubsub-repro-subscription-%d", i)
 	}
