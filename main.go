@@ -18,9 +18,9 @@ import (
 
 var (
 	// Set to true if you want this task to publish
-	shouldPublish = strconv.Atoi(os.Getenv("PUBLISH")) || true
+	shouldPublish = os.Getenv("PUBLISH")
 	// Set to true if you want this task to subscribe
-	shouldSubscribe = strconv.Atoi(os.Getenv("SUBSCRIBE")) || true
+	shouldSubscribe = os.Getenv("SUBSCRIBE")
 
 	projectname = os.Getenv("PROJECT_ID")
 
@@ -142,7 +142,7 @@ func main() {
 
 	res := createSubscription(ctx, client)
 	go res.logNCallbacks()
-	if shouldPublish {
+	if shouldPublish == "true" {
 		ticker := time.NewTicker(broadcastRate)
 		go func(res *Subscription) {
 			fmt.Println("Starting ticker by broadcasing a message!")
@@ -154,7 +154,7 @@ func main() {
 		defer ticker.Stop()
 	}
 
-	if shouldSubscribe {
+	if shouldSubscribe == "true" {
 		go res.process()
 	}
 	select {}
