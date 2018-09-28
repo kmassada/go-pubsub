@@ -17,7 +17,18 @@ spec:
       containers:
       - image: ${CONTAINER_IMAGE}
         name: ${APPLICATION}
+        resources:
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+          requests:
+            cpu: "0.5"
+            memory: "256Mi"
         env:
+        - name: PUBLISH
+          value: "true"
+        - name: SUBSCRIBE
+          value: "true"
         - name: "SUB_SUFFIX"
           value: 4
         - name: "GOOGLE_APPLICATION_CREDENTIALS"
