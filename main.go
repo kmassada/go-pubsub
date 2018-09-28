@@ -18,9 +18,9 @@ import (
 
 var (
 	// Set to true if you want this task to publish
-	shouldPublish = true
+	shouldPublish = strconv.Atoi(os.Getenv("PUBLISH")) || true
 	// Set to true if you want this task to subscribe
-	shouldSubscribe = true
+	shouldSubscribe = strconv.Atoi(os.Getenv("SUBSCRIBE")) || true
 
 	projectname = os.Getenv("PROJECT_ID")
 

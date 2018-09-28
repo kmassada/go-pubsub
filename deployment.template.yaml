@@ -18,6 +18,8 @@ spec:
       - image: ${CONTAINER_IMAGE}
         name: ${APPLICATION}
         env:
+        - name: "SUB_SUFFIX"
+          value: 4
         - name: "GOOGLE_APPLICATION_CREDENTIALS"
           value: "/var/run/secret/cloud.google.com/$APPLICATION-sa-key.json"
         - name: "PROJECT_ID"
