@@ -51,7 +51,7 @@ type Subscription struct {
 func (sub *Subscription) process() {
 	fmt.Printf("Listening for messages...\n\n")
 	err := sub.subscription.Receive(sub.context, func(ctx context.Context, msg *pubsub.Message) {
-		atomic.AddInt32(&sub.nCallbacks, -1)
+		atomic.AddInt32(&sub.nCallbacks, 1)
 		defer atomic.AddInt32(&sub.nCallbacks, -1)
 		fmt.Printf("Message received: %q\n", msg.ID)
 		msg.Ack()
