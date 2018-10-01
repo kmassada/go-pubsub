@@ -51,6 +51,7 @@ type Subscription struct {
 func (sub *Subscription) process() {
 	fmt.Printf("Listening for messages...\n\n")
 	for {
+		fmt.Println("calling Receive")
 		err := sub.subscription.Receive(sub.context, func(ctx context.Context, msg *pubsub.Message) {
 			atomic.AddInt32(&sub.nCallbacks, 1)
 			defer atomic.AddInt32(&sub.nCallbacks, -1)
@@ -59,11 +60,11 @@ func (sub *Subscription) process() {
 		})
 		//retryable
 		if status.Code(err) == codes.Unavailable {
-	        fmt.Print("check for status codes error")
-	        time.Sleep(10*time.Second)
-	        continue
-	    }
-	    //non-retryable error
+			fmt.Printf("retrying on error %v\n", err)
+			time.Sleep(10 * time.Second)
+			continue
+		}
+		//non-retryable error
 		if err != nil {
 			fmt.Printf("process() Receive Error: %v\n", err)
 			debug.PrintStack()
