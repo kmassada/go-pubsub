@@ -1,3 +1,4 @@
 .vscode/
 go-pubsub
-app
+appsrc/
+deployment.yaml
