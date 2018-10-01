@@ -50,18 +50,27 @@ type Subscription struct {
 
 func (sub *Subscription) process() {
 	fmt.Printf("Listening for messages...\n\n")
-	err := sub.subscription.Receive(sub.context, func(ctx context.Context, msg *pubsub.Message) {
-		atomic.AddInt32(&sub.nCallbacks, 1)
-		defer atomic.AddInt32(&sub.nCallbacks, -1)
-		fmt.Printf("Message received: %q\n", msg.ID)
-		msg.Ack()
-	})
-	if err != nil {
-		fmt.Printf("process() Receive Error: %v\n", err)
-		debug.PrintStack()
+	for {
+		err := sub.subscription.Receive(sub.context, func(ctx context.Context, msg *pubsub.Message) {
+			atomic.AddInt32(&sub.nCallbacks, 1)
+			defer atomic.AddInt32(&sub.nCallbacks, -1)
+			fmt.Printf("Message received: %q\n", msg.ID)
+			msg.Ack()
+		})
+		//retryable
+		if status.Code(err) == codes.Unavailable {
+	        fmt.Print("check for status codes error")
+	        time.Sleep(10*time.Second)
+	        continue
+	    }
+	    //non-retryable error
+		if err != nil {
+			fmt.Printf("process() Receive Error: %v\n", err)
+			debug.PrintStack()
+		}
+		fmt.Printf("Bailing\n")
+		sub.Stop()
 	}
-	fmt.Printf("Bailing\n")
-	sub.Stop()
 }
 
 func (sub *Subscription) Stop() {
