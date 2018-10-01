@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"os/user"
+	"runtime/debug"
 	"strconv"
 	"sync/atomic"
 	"time"
@@ -57,6 +58,7 @@ func (sub *Subscription) process() {
 	})
 	if err != nil {
 		fmt.Printf("process() Receive Error: %v\n", err)
+		debug.PrintStack()
 	}
 	fmt.Printf("Bailing\n")
 	sub.Stop()
